@@ -23,8 +23,8 @@ def get_parser():
                         help="Batch size for evaluation (default: 8)")
     parser.add_argument("--mode", type=str, default="MH", choices=["MH", "MH+CN"],
                         help="Data modality (default: 'MH', options: 'MH', 'MH+CN')")
-    parser.add_argument("--sdc_tecnique", type=str, default="masking", choices=["masking", "probs_multiplication"],
-                        help="SDC technique to apply (default: 'masking', options: 'masking', 'probs_multiplication')")
+    parser.add_argument("--sc_tecnique", type=str, default="probs_multiplication", choices=["masking", "probs_multiplication"],
+                        help="SDC technique to apply (default: 'probs_multiplication', options: 'masking', 'probs_multiplication')")
 
     return parser
 
@@ -34,15 +34,15 @@ def main():
     parser = get_parser()
     args = parser.parse_args()
 
-    valid_preds_output_dir = f"./ST2/predictions/sdc_{args.sdc_tecnique}_{args.mode}_preds_on_valid.csv"
-    test_preds_output_dir = f"./ST2/predictions/sdc_{args.sdc_tecnique}_{args.mode}_preds_on_test.csv"
+    valid_preds_output_dir = f"./ST2/predictions/sc_{args.sc_tecnique}_{args.mode}_preds_on_valid.csv"
+    test_preds_output_dir = f"./ST2/predictions/sc_{args.sc_tecnique}_{args.mode}_preds_on_test.csv"
 
     print(f"ST1 model directory: {args.saved_ST1_model_dir}")
     print(f"ST2 model directory: {args.saved_ST2_model_dir}")
     print(f"Model Name: {args.model_name}")
     print(f"Batch Size: {args.batch_size}")
     print(f"Data modality: {args.mode}")
-    print(f"SDC Technique: {args.sdc_tecnique}")
+    print(f"SDC Technique: {args.sc_tecnique}")
     print(f"Validation Predictions Output Path: {valid_preds_output_dir}")
     print(f"Test Predictions Output Path: {test_preds_output_dir}")
 
@@ -51,7 +51,7 @@ def main():
     model_name = args.model_name
     batch_size = args.batch_size
     mode = args.mode
-    sdc_tecnique = args.sdc_tecnique
+    sc_tecnique = args.sc_tecnique
     
     true_validation = pd.read_csv('../data/raw/incidents_valid.csv', index_col=0)
     true_test = pd.read_csv('../data/raw/incidents_test.csv', index_col = 0)
@@ -104,7 +104,7 @@ def main():
         mapping_category_detail_hazard = json.load(json_file)
     mapping_category_detail_hazard = {int(k): v for k, v in mapping_category_detail_hazard.items()}
     
-    if sdc_tecnique.lower() == 'masking':
+    if sc_tecnique.lower() == 'masking':
         preds_validation = SDC_masking(category_model=category_model, 
                     detail_model=detail_model, 
                     test_loader=validation_loader, 
@@ -125,7 +125,7 @@ def main():
                     category_to_detail_map_task_2= mapping_category_detail_product
                     )
 
-    elif sdc_tecnique.lower() == 'probs_multiplication':
+    elif sc_tecnique.lower() == 'probs_multiplication':
         preds_validation = SDC_probs_multiplication(category_model=category_model, 
                     detail_model=detail_model, 
                     test_loader=validation_loader, 
@@ -169,7 +169,7 @@ def main():
             df_preds_test['product'].to_numpy()
             )
     
-    print(f"With SDC tecnique: {sdc_tecnique}")
+    print(f"With Sequence Classification (SC) tecnique: {sc_tecnique}")
     print(f"Score on the validations set: {round(score_validation, 4)} \n")
     print(f"Score on the test set: {round(score_test, 4)} \n")
     
